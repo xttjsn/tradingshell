@@ -1,0 +1,64 @@
+.paragraph {
+  text-align: center;
+}
+
+.heading {
+  margin-top: 200px;
+  font-family: 'Open Sans', sans-serif;
+  text-align: center;
+}
+
+.paragraph-2 {
+  position: static;
+  width: 50%;
+  margin-right: auto;
+  margin-left: auto;
+  text-align: center;
+}
+
+.button {
+  display: inline-block;
+  margin-top: 10%;
+  margin-left: 42%;
+  float: left;
+  clear: none;
+  border: 1px solid #000;
+  background-color: #fff;
+  color: #2e2626;
+}
+
+.button-2 {
+  margin-top: 10%;
+  margin-left: 5%;
+  border: 1px solid #000;
+  background-color: #fff;
+  color: #1a1414;
+}
+
+.form {
+  width: 30%;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.submit-button {
+  margin-top: 47px;
+  margin-right: 0px;
+  margin-left: 39%;
+  float: none;
+  border: 1px solid #000;
+  background-color: #fff;
+  color: #000;
+}
+
+.form-block {
+  margin-top: 21%;
+}
+
+.text-field {
+  border: 1px solid #000;
+}
+
+.text-field-2 {
+  border: 1px solid #000;
+}

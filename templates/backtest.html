@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Backtest{% end %}
+
+{% block body %}
+<div class="columns-3 w-row">
+<div class="w-col w-col-6">
+    <div class="w-row">
+    <div class="w-col w-col-9">
+	<p>Backtest Strategy XXX</p>
+    </div>
+    <div class="w-col w-col-3"><a href="#" class="button w-button">Confirm</a></div>
+    </div>
+    <div></div>
+</div>
+<div class="w-col w-col-6">
+    <div class="w-row">
+    <div class="w-col w-col-3"><a href="#" class="button w-button">Run backtest</a></div>
+    <div class="w-col w-col-3">
+	<div class="w-form">
+	<form id="email-form" name="email-form" data-name="Email Form"><label for="name">Start Date</label><input type="text" id="name" name="name" data-name="Name" maxlength="256" class="w-input"></form>
+	<div class="w-form-done">
+	    <div>Thank you! Your submission has been received!</div>
+	</div>
+	<div class="w-form-fail">
+	    <div>Oops! Something went wrong while submitting the form.</div>
+	</div>
+	</div>
+    </div>
+    <div class="w-col w-col-3">
+	<div class="w-form">
+	<form id="email-form-2" name="email-form-2" data-name="Email Form 2"><label for="name-2">End Date</label><input type="text" id="name-2" name="name-2" data-name="Name 2" maxlength="256" class="w-input"></form>
+	<div class="w-form-done">
+	    <div>Thank you! Your submission has been received!</div>
+	</div>
+	<div class="w-form-fail">
+	    <div>Oops! Something went wrong while submitting the form.</div>
+	</div>
+	</div>
+    </div>
+    <div class="w-col w-col-3">
+	<div class="w-form">
+	<form id="email-form-3" name="email-form-3" data-name="Email Form 3"><label for="name-3">Initial Capital</label><input type="text" id="name-3" name="name-3" data-name="Name 3" maxlength="256" class="w-input"></form>
+	<div class="w-form-done">
+	    <div>Thank you! Your submission has been received!</div>
+	</div>
+	<div class="w-form-fail">
+	    <div>Oops! Something went wrong while submitting the form.</div>
+	</div>
+	</div>
+    </div>
+    </div>
+    <div></div>
+</div>
+</div>
+{% end %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Strategy Picker{% end %}
+
+{% block body %}
+<div class="columns-2 w-row">
+    <div class="w-col w-col-4">
+	<div data-duration-in="300" data-duration-out="100" class="w-tabs">
+	<div class="w-tab-menu">
+	    <a data-w-tab="Tab 1" class="w-inline-block w-tab-link w--current">
+	    <div>Builtin</div>
+	    </a>
+	    <a data-w-tab="Tab 2" class="w-inline-block w-tab-link">
+	    <div>Custom</div>
+	    </a>
+	    <a data-w-tab="Tab 3" class="w-inline-block w-tab-link">
+	    <div>Selected </div>
+	    </a>
+	</div>
+	<div class="w-tab-content">
+	    <div data-w-tab="Tab 1" class="w-tab-pane w--tab-active">
+	    <ul class="w-list-unstyled">
+		<li>Strategy 1 Placeholder</li>
+		<li>Strategy 2 Placeholder</li>
+		<li>Strategy 3 Placeholder</li>
+	    </ul>
+	    </div>
+	    <div data-w-tab="Tab 2" class="w-tab-pane"></div>
+	    <div data-w-tab="Tab 3" class="w-tab-pane"></div>
+	</div>
+	</div>
+    </div>
+    <div class="w-col w-col-4">
+	<div class="div-block"><a href="#" class="button middle w-button">View Strategy</a><a href="#" class="button w-button">Save Strategy</a><a href="#" class="button w-button">Remove Strategy</a><a href="#" class="button w-button">Select Strategy</a><a href="#" class="button w-button">Import Strategy</a><a href="#" class="button w-button">Add Strategy</a><a href="#" class="button w-button">Export Strategy</a><a href="#" class="button w-button">Backtest</a></div>
+    </div>
+    <div class="w-col w-col-4"></div>
+</div><a href="#" class="button confirm w-button">Confirm</a>
+{% end %}

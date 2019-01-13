@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Strategy Mixer{% end %}
+
+{% block body %}
+<div class="w-form">
+    <form id="email-form" name="email-form" data-name="Email Form">
+	<div class="w-layout-grid grid-3">
+	<div id="w-node-1851f243faca-f956be1a" class="w-row">
+	    <div class="w-col w-col-6"><label>Strategy 1</label></div>
+	    <div class="w-col w-col-6"><input type="number" class="w-input" maxlength="256" name="field" data-name="Field" placeholder="0.1" id="field" required=""></div>
+	</div>
+	</div>
+    </form>
+    <div class="w-form-done">
+	<div>Thank you! Your submission has been received!</div>
+    </div>
+    <div class="w-form-fail">
+	<div>Oops! Something went wrong while submitting the form.</div>
+    </div>
+</div>
+<div class="w-row">
+    <div class="w-col w-col-6">
+	<div class="div-block-2"><a href="#" class="button w-button">Backtest</a></div>
+    </div>
+    <div class="w-col w-col-6">
+	<div class="div-block-3"><a href="#" class="button w-button">Confirm</a></div>
+    </div>
+</div>
+{% end %}
