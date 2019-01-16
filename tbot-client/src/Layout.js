@@ -10,6 +10,7 @@ class Layout extends Component {
           <Col>{this.props.left}</Col>
           <Col>{this.props.right}</Col>
         </Row>
+        
       </Container>
     );
   }

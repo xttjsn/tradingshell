@@ -10,7 +10,7 @@ import './Panel.css';
 class CodePanel extends Component {
   render() {
     return (
-      <div className="overlay_div z_index_0">
+      <div className="">
         <AceEditor
           mode="python"
           theme="github"
