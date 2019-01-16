@@ -9,6 +9,7 @@ import base64
 import os
 import logging
 import datetime
+import json
 
 logger = logging.getLogger('tbot')
 
@@ -39,18 +40,6 @@ def encrypt_password(salt, password):
 
     return salt, encrypted_password
     
-class HomePageHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render('index.html')
-
-class SignUpHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render('signup.html')
-
-class LoginHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render('login.html')
-
 class SetupHandler(tornado.web.RequestHandler):
     def get(self):
         self.render('setup.html')
@@ -69,14 +58,30 @@ class MonitorHandler(tornado.web.RequestHandler):
 
 class BacktestHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render('backtest.html')
+        algonames = self.get_algonames()
+        self.render('backtest.html', algonames=algonames)
+
+    def post(self):
+        algoname = self.get_argument('algoname')
+        self.write(json.dumps({'code': self.get_algocode(algoname)}))
+
+    def get_algonames(self):
+        dir_path = os.path.dirname(os.path.realpath(__file__)) + '/static/algo'
+        algonames = []
+        for algoname in os.listdir(dir_path):
+            if algoname.endswith('.py'):
+                algonames.append(algoname.split('.')[0])
+        return algonames
+
+    def get_algocode(self, algoname):
+        file_path = os.path.dirname(os.path.realpath(__file__)) + '/static/algo/' + algoname + '.py'
+        with open(file_path, 'r') as f:
+            return f.read()
 
 class TBotApplication(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r'/', HomePageHandler),
-            (r'/signup', SignUpHandler),
-            (r'/login', LoginHandler),
+            (r'/', BacktestHandler),
             (r'/setup', SetupHandler),
             (r'/strategy_picker', StrategyPickerHandler),
             (r'/strategy_mixer', StrategyMixerHandler),
