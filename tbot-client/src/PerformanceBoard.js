@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
+import { Container, Row, Col } from 'reactstrap';
 import PerformanceChart from './PerformanceChart';
+import LoggingPanel from './LoggingPanel';
 import { getData } from './utils';
 
 class PerformanceBoard extends Component {
@@ -15,7 +17,15 @@ class PerformanceBoard extends Component {
     }
     
     return (
-      <PerformanceChart data={this.state.data} width={500} ratio={0.8}/>
+      <Container>
+        <Row>
+          <PerformanceChart data={this.state.data} width={500} ratio={0.8}/>          
+        </Row>
+        <Row>
+          <LoggingPanel/>
+        </Row>
+      </Container>
+
     );
   }
 }
