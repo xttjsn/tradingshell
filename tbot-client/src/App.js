@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import Layout from './Layout';
 import StrategyBoard from './StrategyBoard';
+import PerformanceBoard from './PerformanceBoard';
 import moment from 'moment';
 
 class App extends Component {
@@ -42,7 +43,7 @@ class App extends Component {
   }
   
   render() {
-    var strategyBoard = (<StrategyBoard
+    let strategyBoard = (<StrategyBoard
                            algocode={this.state.algocode}
                            onCodeChange={this.onCodeChange}
                            setBacktestStartDate={this.setBacktestStartDate}
@@ -51,8 +52,9 @@ class App extends Component {
                            backtestEndDate={this.state.backtestEndDate}
                            setInitCapital={this.setInitCapital}
                            initCapital={this.state.initCapital}/>);
+    let performanceBoard = (<PerformanceBoard/>);
     return (
-      <Layout left={strategyBoard} right="World!"/>
+      <Layout left={strategyBoard} right={performanceBoard}/>
      );
   }
 }
