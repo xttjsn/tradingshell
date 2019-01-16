@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Chart from './Chart';
+import PerformanceChart from './PerformanceChart';
 import { getData } from './utils';
 
 class PerformanceBoard extends Component {
@@ -15,7 +15,7 @@ class PerformanceBoard extends Component {
     }
     
     return (
-      <Chart data={this.state.data} width={500} ratio={0.8}/>
+      <PerformanceChart data={this.state.data} width={500} ratio={0.8}/>
     );
   }
 }
