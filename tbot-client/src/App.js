@@ -48,9 +48,9 @@ class App extends Component {
                            onCodeChange={this.onCodeChange}
                            setBacktestStartDate={this.setBacktestStartDate}
                            setBacktestEndDate={this.setBacktestEndDate}
+                           setInitCapital={this.setInitCapital}
                            backtestStartDate={this.state.backtestStartDate}
                            backtestEndDate={this.state.backtestEndDate}
-                           setInitCapital={this.setInitCapital}
                            initCapital={this.state.initCapital}/>);
     let performanceBoard = (<PerformanceBoard/>);
     return (

@@ -11,9 +11,9 @@ class StrategyBoard extends Component {
         <MenuPanel
           setBacktestStartDate={this.props.setBacktestStartDate}
           setBacktestEndDate={this.props.setBacktestEndDate}
+          setInitCapital={this.props.setInitCapital}
           backtestStartDate={this.props.backtestStartDate}
           backtestEndDate={this.props.backtestEndDate}
-          setInitCapital={this.props.setInitCapital}
           initCapital={this.props.initCapital}/>
         <CodePanel
           code={this.props.algocode}

@@ -117,7 +117,7 @@ class MenuPanel extends Component {
     return (
       <ButtonGroup className="margined">
         <ButtonDropdown isOpen={this.state.strategiesDropdownOpen} toggle={this.strategiesDropdownToggle}>
-          <DropdownToggle caret>Strategies</DropdownToggle>
+          <DropdownToggle caret >Strategies</DropdownToggle>
           <DropdownMenu>
             <DropdownItem>SMA</DropdownItem>
             <DropdownItem>LMA</DropdownItem>
