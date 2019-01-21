@@ -19,3 +19,53 @@
 *** ChartPanel
 *** Separator
 *** LoggingPanel
+* Server
+** TBotApplication
+** APIHandler
+*** '/api/getAlgoCode'
+Calls the strategy loader to load a raw strategy corresponding to the
+algoName it receives, return the code of the strategy (string) as the
+response. 
+
+*** StrategyLoader
+Responsible for loading strategies from local file system
+*** PerformanceSpy
+*** ZiplinePerformanceSpy
+Represent an object that can be sent to zipline algorithm and report
+back to the listener a data stream of the desired data.
+*** BacktestManager
+Controls the creation, recording and deletion of a backtest session.
+*** ZiplineBacktest
+*** StrategyRewriter
+*** ZiplineStrategyRewriter
+Responsible for rewriting the algorithm code to tbot-friendly
+version. For example, it is responsible to change any non-tbot-aware
+package to tbot's replacement. It will throw an error if no such
+replacement is found.
+*** StrategyPackager
+Responsible for package a raw strategy with spy, and re-formatter.
+*** Strategy
+*** ZiplineStrategy
+Representation of a zipline strategy/algorithm,
+will verify whether or not the algorithm contains "initialize".
+*** PerformanceListener
+Can be bound to a performance spy, upon which a one-way data flow is
+created
+*** DataStream
+Represent an asynchronous flow of data. 
+*** WebSocketManager
+Responsible for the creation, recording and deletion of web sockets.
+*** StreamingWebSocket
+will send or receive a data stream from a socket, instead of plain bytes.
+*** BacktestPipeline
+Responsible for managing the entire process of doing backtest.
+*** Session
+Responsible for managing a user session:
+**** Storage
+***** The current algo
+***** How many algos have the user tried
+***** The best algo, and its parameters
+***** The best performance
+**** Action
+***** Update algo
+***** Run algo

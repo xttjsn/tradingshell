@@ -1,5 +1,6 @@
 import tornado.httpserver
 import tornado.auth
+import tornado.escape
 from tornado.options import define, options
 import tornado.web
 import hashlib
@@ -10,10 +11,16 @@ import os
 import logging
 import datetime
 import json
+import sys
+from action import UnboundAction
+from strategy import StrategyLoader
+from session import Session
+from util import hashAlgo, compose
 
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger('tbot')
 
-define('port', default=8000, type=int)
+define('port', default=9000, type=int)
 define('mongodb_host', default='127.0.0.1', help='mongodb host ip address')
 define('mongodb_port', default=27017, help='mongodb port', type=int)
 define('mongodb_dbname', default='tbot', help='database name')
@@ -39,54 +46,62 @@ def encrypt_password(salt, password):
     encrypted_password = h2.hexdigest()
 
     return salt, encrypted_password
-    
-class SetupHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render('setup.html')
 
-class StrategyPickerHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render('strategypicker.html')
+class BaseHandler(tornado.web.RequestHandler):
 
-class StrategyMixerHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render('strategymixer.html')
+    def __init__(self, *args, **kwargs):
+        super(BaseHandler, self).__init__(*args, **kwargs)
 
-class MonitorHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render('monitor.html')
-
-class BacktestHandler(tornado.web.RequestHandler):
-    def get(self):
-        algonames = self.get_algonames()
-        self.render('backtest.html', algonames=algonames)
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
 
     def post(self):
-        algoname = self.get_argument('algoname')
-        self.write(json.dumps({'code': self.get_algocode(algoname)}))
+        pass
 
-    def get_algonames(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__)) + '/static/algo'
-        algonames = []
-        for algoname in os.listdir(dir_path):
-            if algoname.endswith('.py'):
-                algonames.append(algoname.split('.')[0])
-        return algonames
+    def get(self):
+        pass
 
-    def get_algocode(self, algoname):
-        file_path = os.path.dirname(os.path.realpath(__file__)) + '/static/algo/' + algoname + '.py'
-        with open(file_path, 'r') as f:
-            return f.read()
+    def options(self):
+        logger.info('Received an OPTIONS request at {self.request.uri}')
+
+class APIHandler(BaseHandler):
+
+    def __init__(self, *args, **kwargs):
+        super(APIHandler, self).__init__(*args, **kwargs)
+        self.actionMap = {
+            'getAlgoCode' : UnboundAction(StrategyLoader.loadStrategy),
+            'verifySubmit' : UnboundAction(
+                lambda algoCode: hashAlgo(algoCode, 'SHA256'))
+        }
+        self.keyMap = {
+            'getAlgoCode' : ['algoName'],
+            'verifySubmit' : ['algoCode']
+        }
+    
+    def get(self):
+        logger.info('Recived a GET request')
+        self.write("TBot only accepts POST request")
+
+    def post(self):
+        try:
+            logger.info(f'Received a POST request at {self.request.uri}')
+            endpoint = self.request.uri.split('/')[-1]
+            logger.info(f'Endoint: {endpoint}')
+            action = self.actionMap[endpoint]
+            json = tornado.escape.json_decode(self.request.body)
+            args = {k : json[k] for k in self.keyMap[endpoint]}
+            
+            self.write(action(**args))
+            
+        except Exception as e:
+            logger.error(f'Exception happens while handling {endpoint}: {e}')
 
 class TBotApplication(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r'/', BacktestHandler),
-            (r'/setup', SetupHandler),
-            (r'/strategy_picker', StrategyPickerHandler),
-            (r'/strategy_mixer', StrategyMixerHandler),
-            (r'/monitor', MonitorHandler),
-            (r'/backtest', BacktestHandler),
+            (r'/api/.*', APIHandler)
         ]
 
         settings = {

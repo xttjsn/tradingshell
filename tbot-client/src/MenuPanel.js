@@ -117,10 +117,10 @@ class MenuPanel extends Component {
     return (
       <ButtonGroup className="margined">
         <ButtonDropdown isOpen={this.state.strategiesDropdownOpen} toggle={this.strategiesDropdownToggle}>
-          <DropdownToggle caret >Strategies</DropdownToggle>
+          <DropdownToggle caret id='dd_tgl_strategies' className='dd_tgl'>Strategies</DropdownToggle>
           <DropdownMenu>
-            <DropdownItem>SMA</DropdownItem>
-            <DropdownItem>LMA</DropdownItem>
+            <DropdownItem id='dd_itm_sma' onClick={() => {this.props.loadAlgoCode('SMA');}}>SMA</DropdownItem>
+            <DropdownItem id='dd_itm_lma' onClick={() => {this.props.loadAlgoCode('LMA');}}>LMA</DropdownItem>
           </DropdownMenu>
         </ButtonDropdown>
 

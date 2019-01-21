@@ -1,13 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { shallow, mount } from 'enzyme';
-import { expect } from 'chai';
-import { SHA256 } from 'crypto-js/sha256';
+import chai, { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import sha256 from 'crypto-js/sha256';
 import sinon from 'sinon';
 import App from './App';
 import StrategyBoard from './StrategyBoard';
 import moment from 'moment';
 import api from './API';
+import { ButtonDropdown, DropdownToggle, DropdownMenu, DropdownItem, ButtonGroup } from 'reactstrap';
+
+chai.use(chaiAsPromised);
+chai.should();
+
+function sleep (time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
 
 it('renders without crashing', () => {
   const div = document.createElement('div');
@@ -19,9 +28,10 @@ describe('Test api', () => {
 
   it('Get algorithm code', () => {
 
-    let testAlgoCode = "print('Get algorithm code')";
+    let testAlgoCode = "print('Test code')";
     
-    api.getAlgoCode('testAlgo')
+    return api.getAlgoCode('testAlgo', 'http://localhost:9000')
+      .then(res => res.text())
       .then(code => {
         expect(code).to.be.a('string');
         expect(code).to.equal(testAlgoCode);
@@ -32,10 +42,11 @@ describe('Test api', () => {
     
     let testAlgoCode = "print('Submit algorithm code')";
 
-    api.submitAlgoCode(testAlgoCode, true)  // Require code hash to be sent back
+    return api.verifySubmit(testAlgoCode, 'http://localhost:9000')
+      .then(res => res.text())
       .then(codeHash => {
         expect(codeHash).to.be.a('string');
-        expect(codeHash).to.equal(SHA256(testAlgoCode).toString());
+        expect(codeHash).to.equal(sha256(testAlgoCode).toString());
       });
   });
   
@@ -62,19 +73,25 @@ describe('Test strategy board', () => {
                                 setInitCapital={setInitCap}                            
                                 backtestStartDate={sDate}
                                 backtestEndDate={eDate}
-                                initCapital={initCap}/>);
+                                initCapital={initCap}
+                                isTesting={true}/>);
+    strategyBoard.update();
+    strategyBoard.find('#dd_tgl_strategies').first().simulate('click');
+    strategyBoard.update();    
+    strategyBoard.find('#dd_itm_sma').first().simulate('click');
+    strategyBoard.update();
     
-    strategyBoard.find('#DropdownToggleStrategies').simulate('click');
-    strategyBoard.find('#DropdownItemSMA').simulate('click');
-
-    api.getAlgoCode('SMA')
+    return api.getAlgoCode('SMA', 'http://localhost:9000')
+      .then(res => res.text())
       .then(smaCode => {
-        expect(code).to.be.a('string');
-        expect(smaCode).to.be.a('string');
-        expect(code).to.equal(smaCode);
+        // Sleep 0.5 second to ensure the algorithm has been downloaded
+        sleep(500).then(() => {
+          expect(code).to.be.a('string');
+          expect(smaCode).to.be.a('string');
+          expect(code).to.equal(smaCode);
+          strategyBoard.unmount();          
+        });
       });
-
-    strategyBoard.unmount();
   });  
 });
 
