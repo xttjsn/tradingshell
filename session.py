@@ -13,3 +13,21 @@ class Session(object):
     def runBacktest(self):
         return self
 
+def f(algoCode, mode):
+
+    def noop(*args, **kwargs):
+        pass
+
+    if mode == 'GENERATOR_MODE':
+        code = compile(algoCode, '<string>', 'exec')
+        namespace = {}
+        exec(code, namespace)
+        _gen = namespace.get('fun', noop)
+
+        producer = GeneratorProducer()
+        
+        gthread = GeneratorThread(_gen)
+        uri = gthread.get_wsuri()
+        return uri
+    elif mode == 'ZIPLINE_MODE':
+        pass

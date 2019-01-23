@@ -51,7 +51,7 @@ will verify whether or not the algorithm contains "initialize".
 *** PerformanceListener
 Can be bound to a performance spy, upon which a one-way data flow is
 created
-*** DataStream
+*** DataTunnel
 Represent an asynchronous flow of data. 
 *** WebSocketManager
 Responsible for the creation, recording and deletion of web sockets.

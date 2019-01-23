@@ -39,6 +39,24 @@ class API {
       })
     });
   }
+
+  runBacktest = (algoCode, mode, host) => {
+    if (typeof host === 'undefined' || host == null) { host = ''; }
+    return fetch(host + '/api/runBacktest', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        algoCode: algoCode,
+        mode: mode
+      })
+    }).then(res => res.text())
+      .then(uri => { // This is the uri that the server has granted us for websocket
+        var ws = new WebSocket(uri);
+        return ws;
+      });
+  }
 }
 
 var api = new API();

@@ -14,7 +14,7 @@ import json
 import sys
 from action import UnboundAction
 from strategy import StrategyLoader
-from session import Session
+from session import Session, f
 from util import hashAlgo, compose
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -74,6 +74,8 @@ class APIHandler(BaseHandler):
             'getAlgoCode' : UnboundAction(StrategyLoader.loadStrategy),
             'verifySubmit' : UnboundAction(
                 lambda algoCode: hashAlgo(algoCode, 'SHA256'))
+            'runBacktest' : UnboundAction(f)
+
         }
         self.keyMap = {
             'getAlgoCode' : ['algoName'],

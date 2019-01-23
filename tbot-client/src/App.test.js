@@ -18,6 +18,14 @@ function sleep (time) {
   return new Promise((resolve) => setTimeout(resolve, time));
 }
 
+function factorial(n) {
+  if (n === 0) { return 1; }
+  else if (n < 0) { return -1; }
+  else {
+    return n * factorial(n - 1);
+  }
+}
+
 it('renders without crashing', () => {
   const div = document.createElement('div');
   ReactDOM.render(<App />, div);
@@ -106,10 +114,31 @@ describe('Test performance board', () => {
   });  
 });
 
-describe('Test server side communication', () => {
+describe('Test server-client websocket communication', () => {
   
-  it('Run backtest command sends correct data to server', () => {
-  
+  it('Factorial generator returns each number generated correctedly ', (done) => {
+
+    api.getAlgoCode('__TEST_FACTORIAL', 'http://localhost:9000')
+      .then(res => res.text())
+      .then(code => {
+        api.runBacktest(code, 'GENERATOR_MODE', 'http://localhost:9000')
+          .then(ws => {
+            var i = 10;
+            var res = 1;
+            ws.onmessage = (e) => {
+              let msg = JSON.parse(e.data);
+              let val = msg.value;
+              expect(val).to.equal(res * i);
+              res *= i;
+              i -= 1;
+            };
+            
+            setTimeout(() => {
+              expect(res).to.equal(factorial(10));
+              done();
+            }, 2000);
+          });
+      });
   });
 });
 
