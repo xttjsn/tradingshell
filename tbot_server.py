@@ -14,7 +14,7 @@ import json
 import sys
 from action import UnboundAction
 from strategy import StrategyLoader
-from session import Session, f
+from machine import BacktestMachine
 from util import hashAlgo, compose
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -72,15 +72,39 @@ class APIHandler(BaseHandler):
         super(APIHandler, self).__init__(*args, **kwargs)
         self.actionMap = {
             'getAlgoCode' : UnboundAction(StrategyLoader.loadStrategy),
-            'verifySubmit' : UnboundAction(
-                lambda algoCode: hashAlgo(algoCode, 'SHA256'))
-            'runBacktest' : UnboundAction(f)
+            'verifySubmit' : UnboundAction(lambda algoCode: hashAlgo(algoCode, 'SHA256'))
+            'runBacktest' : UnboundAction(self.handleRunBacktest)
 
         }
         self.keyMap = {
             'getAlgoCode' : ['algoName'],
-            'verifySubmit' : ['algoCode']
+            'verifySubmit' : ['algoCode'],
+            'runBacktest' : ['session_id', 'algoCode', 'mode']
         }
+
+    def initialize(self, machineGroup):
+        self._machineGroup = machineGroup
+
+    def handleRunBacktest(self, session_id, algoCode, mode):
+        # if there is already a backtest machine for the session,
+        # stop the machine, and create a new machine
+        # ele
+
+        try:
+            if session_id not in self._machineGroup:
+                bm = BacktestMachine(algoCode, mode)
+                self._machineGroup[session_id] = bm
+                bm.start()
+            else:
+                bm = self._machineGroup[session_id]
+                if not bm.stopped():
+                    bm.stop()    
+                bm.restart(algoCode, mode)
+        except Exception as e:
+            return e.args[0] + ','.join(map(str, e.args[1]))
+            
+        ws_port = bm.getEndpoint()
+        return ws_port
     
     def get(self):
         logger.info('Recived a GET request')
@@ -93,8 +117,14 @@ class APIHandler(BaseHandler):
             logger.info(f'Endoint: {endpoint}')
             action = self.actionMap[endpoint]
             json = tornado.escape.json_decode(self.request.body)
-            args = {k : json[k] for k in self.keyMap[endpoint]}
-            
+
+            try:
+                args = {k : json[k] for k in self.keyMap[endpoint]}
+            except KeyError as e:
+                missingKey = e.args[0]
+                self.write(f'Missing key: {missingKey}')
+                return
+
             self.write(action(**args))
             
         except Exception as e:
@@ -102,8 +132,10 @@ class APIHandler(BaseHandler):
 
 class TBotApplication(tornado.web.Application):
     def __init__(self):
+        self._machineGroup = {}
+        
         handlers = [
-            (r'/api/.*', APIHandler)
+            (r'/api/.*', APIHandler, dict(machineGroup=self._machineGroup))
         ]
 
         settings = {
@@ -116,7 +148,6 @@ class TBotApplication(tornado.web.Application):
         }
 
         super(TBotApplication, self).__init__(handlers, **settings)
-
 
 def main():
     tornado.options.parse_command_line()

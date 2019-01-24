@@ -13,6 +13,30 @@ class Session(object):
     def runBacktest(self):
         return self
 
+class BacktestMachine(object):
+
+    _producer_types = {
+        'GENERATOR_MODE' : GeneratorProducer,
+        'ZIPLINE_MODE' : ZiplineProducer
+    }
+
+    def __init__(self, code, mode='GENERATOR_MODE'):
+        self._producer = BacktestMachine._producer_types[mode](code)
+        self._consumer = WebsocketServerConsumer()
+
+    def getEndpoint(self):
+        return self._consumer.getClientEndpoint()
+
+    def start(self):
+        self._producer.start()
+        self._consumer.start()
+
+    def stop(self):
+        self._producer.stop()
+        self._consumer.stop()
+        self._producer.join()
+        self._consumer.join()
+
 def f(algoCode, mode):
 
     def noop(*args, **kwargs):
