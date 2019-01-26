@@ -3,6 +3,8 @@
 import hashlib
 import logging
 import sys
+import socket
+from contextlib import closing
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -19,3 +21,10 @@ def getLogger(filename):
 
 def compose(*funcs):
     pass
+
+def getFreePort():
+    
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]

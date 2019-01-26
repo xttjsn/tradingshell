@@ -5,8 +5,19 @@ import Layout from './Layout';
 import StrategyBoard from './StrategyBoard';
 import PerformanceBoard from './PerformanceBoard';
 import moment from 'moment';
+import api from './API';
 
 class App extends Component {
+
+  componentDidMount() {
+    api.newSession(this.props.host)
+      .then(session_id => {
+        this.setState({
+          session_id: session_id
+        });
+      });
+  }
+  
   constructor(props) {
     super(props);
 
@@ -14,8 +25,10 @@ class App extends Component {
       algocode: "import asyncio\nprint('Hello')",
       backtestStartDate: moment('2012-01-01'),
       backtestEndDate: moment('2018-01-01'),
-      initCapital: 100000
+      initCapital: 100000,
+      host: this.props.host
     };
+
   }
 
   onCodeChange = (newCode) => {

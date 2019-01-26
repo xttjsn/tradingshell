@@ -1,6 +1,21 @@
 class API {
+
+  newSession = (host) => {
+    if (typeof host == 'undefined' || host == null) { host = ''; }
+    return fetch(host + '/api/newSession', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        dummy: 'dummy'
+      })
+    });
+  }
+  
   getAlgoCode = (algoName, host) => {
-    if (typeof host === 'undefined' || host == null) { host = ''; }
+    if (typeof host == 'undefined' || host == null) { host = ''; }
+    host = 'http://localhost:9000';
     return fetch(host + '/api/getAlgoCode', {
       method: 'POST',
       headers : {
@@ -14,7 +29,7 @@ class API {
   }
 
   submitAlgoCode = (algoCode, run, host) => {
-    if (typeof host === 'undefined' || host == null) { host = ''; }
+    if (typeof host == 'undefined' || host == null) { host = ''; }
     return fetch(host + '/api/submitAlgoCode', {
       method: 'POST',
       headers : {
@@ -28,7 +43,7 @@ class API {
   }
 
   verifySubmit = (algoCode, host) => {
-    if (typeof host === 'undefined' || host == null) { host = ''; }
+    if (typeof host == 'undefined' || host == null) { host = ''; }
     return fetch(host + '/api/verifySubmit', {
       method: 'POST',
       headers : {
@@ -40,8 +55,8 @@ class API {
     });
   }
 
-  runBacktest = (algoCode, mode, host) => {
-    if (typeof host === 'undefined' || host == null) { host = ''; }
+  runBacktest = (algoCode, mode, session_id, host) => {
+    if (typeof host == 'undefined' || host == null) { host = ''; }
     return fetch(host + '/api/runBacktest', {
       method: 'POST',
       headers: {
@@ -49,11 +64,14 @@ class API {
       },
       body: JSON.stringify({
         algoCode: algoCode,
-        mode: mode
+        mode: mode,
+        session_id: session_id
       })
     }).then(res => res.text())
-      .then(uri => { // This is the uri that the server has granted us for websocket
-        var ws = new WebSocket(uri);
+      .then(wsport => { // This is the port that runs websocket server
+        
+        var host = window.location.hostname;
+        var ws = new WebSocket('ws:' + host + ':' + wsport);
         return ws;
       });
   }

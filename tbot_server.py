@@ -72,24 +72,26 @@ class APIHandler(BaseHandler):
         super(APIHandler, self).__init__(*args, **kwargs)
         self.actionMap = {
             'getAlgoCode' : UnboundAction(StrategyLoader.loadStrategy),
-            'verifySubmit' : UnboundAction(lambda algoCode: hashAlgo(algoCode, 'SHA256'))
-            'runBacktest' : UnboundAction(self.handleRunBacktest)
-
+            'verifySubmit' : UnboundAction(lambda algoCode: hashAlgo(algoCode, 'SHA256')),
+            'runBacktest' : UnboundAction(self.handleRunBacktest.__get__(self)),
+            'newSession' : self._newSession
         }
         self.keyMap = {
             'getAlgoCode' : ['algoName'],
             'verifySubmit' : ['algoCode'],
-            'runBacktest' : ['session_id', 'algoCode', 'mode']
+            'runBacktest' : ['session_id', 'algoCode', 'mode'],
+            'newSession' : []
         }
 
-    def initialize(self, machineGroup):
+    def initialize(self, machineGroup, newSession):
         self._machineGroup = machineGroup
+        self._newSession = newSession
 
     def handleRunBacktest(self, session_id, algoCode, mode):
         # if there is already a backtest machine for the session,
         # stop the machine, and create a new machine
         # ele
-
+        logger.debug('running handleBacktest')
         try:
             if session_id not in self._machineGroup:
                 bm = BacktestMachine(algoCode, mode)
@@ -101,10 +103,11 @@ class APIHandler(BaseHandler):
                     bm.stop()    
                 bm.restart(algoCode, mode)
         except Exception as e:
-            return e.args[0] + ','.join(map(str, e.args[1]))
+            return e.args[0]
             
         ws_port = bm.getEndpoint()
-        return ws_port
+        logger.debug(f"ws_port : {ws_port}")
+        return str(ws_port)
     
     def get(self):
         logger.info('Recived a GET request')
@@ -133,9 +136,13 @@ class APIHandler(BaseHandler):
 class TBotApplication(tornado.web.Application):
     def __init__(self):
         self._machineGroup = {}
+        self._sessions = set(['1234567890']) # test session id
         
         handlers = [
-            (r'/api/.*', APIHandler, dict(machineGroup=self._machineGroup))
+            (r'/api/.*', APIHandler, {
+                'machineGroup' : self._machineGroup,
+                'newSession' : lambda : self.newSession.__get__(self)()
+            } )
         ]
 
         settings = {
@@ -148,6 +155,11 @@ class TBotApplication(tornado.web.Application):
         }
 
         super(TBotApplication, self).__init__(handlers, **settings)
+
+    def newSession(self):
+        newSessionId = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
+        self._sessions.add(newSessionId)
+        return newSessionId
 
 def main():
     tornado.options.parse_command_line()

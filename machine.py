@@ -4,6 +4,12 @@ from threading import Lock, Condition, Thread
 import asyncio
 import websockets
 from abc import ABCMeta, abstractmethod
+from util import getFreePort
+import logging
+import sys
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 class Endpoint(object):
     def __init__(self):
@@ -43,6 +49,7 @@ class Producer(Thread, metaclass=ABCMeta):
     def __init__(self, endpoint):
         super(Producer, self).__init__()
         self._endpoint = endpoint
+        self._stopRequired = False
 
     @abstractmethod
     def _produce(self):
@@ -55,13 +62,17 @@ class Producer(Thread, metaclass=ABCMeta):
         self._endpoint.give(data)
 
     def end(self):
-        self.endpoint.end()
+        self._endpoint.end()
+
+    def stop(self):
+        self._stopRequired = True
 
 class Consumer(Thread, metaclass=ABCMeta):
 
     def __init__(self, endpoint):
         super(Consumer, self).__init__()
         self._endpoint = endpoint
+        self._stopRequired = False
 
     @abstractmethod
     def _consume(self):
@@ -73,6 +84,9 @@ class Consumer(Thread, metaclass=ABCMeta):
     def take(self):
         return self._endpoint.take()
 
+    def stop(self):
+        self._stopRequired = True
+
 class GeneratorProducer(Producer):
 
     def __init__(self, endpoint, code):
@@ -82,14 +96,27 @@ class GeneratorProducer(Producer):
 
         def noop(*args, **kwargs):
             pass
+
+        logger.debug(f'code={code}')
         
-        self._gen = self._namspace.get('gen', noop)
+        self._gen = self._namespace.get('gen', noop)
 
     def _produce(self):
         """ Simple generator style produce function
         """
+        if self._stopRequired:
+            return
+        
         for item in self._gen():
+
+            # TODO: do we need lock it?
+            if self._stopRequired:
+                return
+            
             self.give(item)
+
+            if self._stopRequired:
+                return
 
         self.end()
 
@@ -102,16 +129,31 @@ class WebsocketServerConsumer(Consumer):
     def _consume(self):
 
         async def action(websocket, path):
-            for msg in self.take():
-                logger.debug(f'Received msg: {msg} from Producer, sending it to client')
-                await websocket.send(msg)
-                logger.debug(f'msg sent')
-            logger.debug('exiting action, closing websocket server')
-            self._server.close()
+            # if self._stopRequired:
+            #     self._server.close()
+            #     return
+            
+            # for msg in self.take():
+            #     if self._stopRequired:
+            #         self._server.close()
+            #         return
+                
+            #     logger.info(f'Received msg: {msg} from Producer, sending it to client')
+            #     await websocket.send(str(msg))
+            #     logger.debug(f'msg sent')
+
+            #     if self._stopRequired:
+            #         self._server.close()
+            #         return
+                
+            # logger.debug('exiting action, closing websocket server')
+            # self._server.close()
+            async for message in websocket:
+                await websocket.send(message)
 
         async def start_action():
             async with websockets.serve(action, 'localhost', self._port) as server:
-                self._sever = server
+                self._server = server
                 await server.wait_closed()
 
         self._loop = asyncio.new_event_loop()

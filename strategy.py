@@ -37,6 +37,8 @@ class StrategyLoader(object):
         if algoName == None:
             return ''
 
+        logger.info(f'loading algo {algoName}')
+        
         #### DBEUG
         if algoName == 'testAlgo':
             return "print('Test code')"

@@ -28,7 +28,7 @@ function factorial(n) {
 
 it('renders without crashing', () => {
   const div = document.createElement('div');
-  ReactDOM.render(<App />, div);
+  ReactDOM.render(<App host="http://localhost:9000"/>, div);
   ReactDOM.unmountComponentAtNode(div);
 });
 
@@ -114,29 +114,60 @@ describe('Test performance board', () => {
   });  
 });
 
+// Make the function wait until the connection is made...
+function waitForSocketConnection(socket, callback){
+    setTimeout(
+        function () {
+            if (socket.readyState === 1) {
+                console.log("Connection is made")
+                if(callback != null){
+                    callback();
+                }
+                return;
+
+            } else {
+                console.log("wait for connection...")
+                waitForSocketConnection(socket, callback);
+            }
+
+        }, 5); // wait 5 milisecond for the connection...
+}
+
 describe('Test server-client websocket communication', () => {
   
   it('Factorial generator returns each number generated correctedly ', (done) => {
 
-    api.getAlgoCode('__TEST_FACTORIAL', 'http://localhost:9000')
+    api.newSession('http://localhost:9000')
       .then(res => res.text())
-      .then(code => {
-        api.runBacktest(code, 'GENERATOR_MODE', 'http://localhost:9000')
-          .then(ws => {
-            var i = 10;
-            var res = 1;
-            ws.onmessage = (e) => {
-              let msg = JSON.parse(e.data);
-              let val = msg.value;
-              expect(val).to.equal(res * i);
-              res *= i;
-              i -= 1;
-            };
-            
-            setTimeout(() => {
-              expect(res).to.equal(factorial(10));
-              done();
-            }, 2000);
+      .then(session_id => {
+        api.getAlgoCode('__TEST_FACTORIAL', 'http://localhost:9000')
+          .then(res => res.text())
+          .then(code => {
+            api.runBacktest(code, 'GENERATOR_MODE', session_id, 'http://localhost:9000')
+              .then(ws => {
+                var i = 10;
+                var res = 1;
+
+                waitForSocketConnection(ws, () => {
+                  
+                ws.onmessage = (e) => {
+                  let msg = JSON.parse(e.data);
+                  let val = parseInt(msg.value);
+                  expect(val).to.equal(999);
+                  expect(val).to.equal(res * i);
+                  res *= i;
+                  i -= 1;
+                  if (i == 0) {
+                    expect(res).to.equal(3628800);
+                  }
+                  done();
+                };
+
+                  
+                });
+
+
+              });
           });
       });
   });

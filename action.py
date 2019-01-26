@@ -16,6 +16,7 @@ class UnboundAction(object):
     def __call__(self, **kwargs):
         f_args = inspect.getargspec(self._partial_f).args or []
         defaults = inspect.getargspec(self._partial_f).defaults or []
+        f_args = [item for item in f_args if item != 'self']
 
         logger.info(f'f_args:{f_args}')
         logger.info(f'defaults:{defaults}')
@@ -29,4 +30,6 @@ class UnboundAction(object):
                 res_args.append(kwargs[key])
                 del kwargs[key]
 
+        logger.info(f'res_args: {res_args}')
+        
         return self._partial_f(*(tuple(res_args)), **kwargs)
