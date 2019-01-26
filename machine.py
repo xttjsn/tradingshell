@@ -1,6 +1,7 @@
 """High level abstraction of the logic of running a backtest - BacktestMachine
 """
-from threading import Lock, Condition, Thread
+from threading import Thread
+from queue import Queue
 import asyncio
 import websockets
 from abc import ABCMeta, abstractmethod
@@ -11,37 +12,23 @@ import sys
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+END_TAG = '__END__'
+
 class Endpoint(object):
     def __init__(self):
-        self._queue = []
-        self._lock = Lock()
-        self._cond = Condition(self._lock)
-        self._ended = False
+        self._queue = Queue(100)
 
     def give(self, data):
-        self._cond.acquire()
-        self._queue.append(data)
-        self._cond.notify_all()
-        self._cond.release()
+        self._queue.put(data)
 
     def end(self):
-        self._cond.acquire()
-        self._ended = True
-        self._cond.notify_all()
-        self._cond.release()
+        self._queue.put(END_TAG)
     
     def take(self):
-        while not self._ended:
-            self._cond.acquire()
-            self._cond.wait()
-            items = self._queue[:]
-            self._queue.clear()
-            self._cond.release()
-            for item in items:
-                yield item
-
-        items = self._queue[:]
-        for item in items:
+        while True:
+            item = self._queue.get()
+            if item == END_TAG:
+                return END_TAG
             yield item
 
 class Producer(Thread, metaclass=ABCMeta):
@@ -129,27 +116,28 @@ class WebsocketServerConsumer(Consumer):
     def _consume(self):
 
         async def action(websocket, path):
-            # if self._stopRequired:
-            #     self._server.close()
-            #     return
-            
-            # for msg in self.take():
-            #     if self._stopRequired:
-            #         self._server.close()
-            #         return
-                
-            #     logger.info(f'Received msg: {msg} from Producer, sending it to client')
-            #     await websocket.send(str(msg))
-            #     logger.debug(f'msg sent')
+            if self._stopRequired:
+                self._server.close()
+                return
 
-            #     if self._stopRequired:
-            #         self._server.close()
-            #         return
+            ready = ''
+            while ready != 'READY':
+                ready = await websocket.recv()
+
+            logger.info(f'Consumer receives ready signal.')
+            
+            for msg in self.take():
                 
-            # logger.debug('exiting action, closing websocket server')
-            # self._server.close()
-            async for message in websocket:
-                await websocket.send(message)
+                logger.info(f'Received msg: {msg} from Producer, sending it to client')
+                print(f'Websocket is in {websocket.state}')
+                await websocket.send(str(msg))
+
+            finished = ''
+            while finished != 'FINISHED':
+                finished = await websocket.recv()
+
+            logger.info('exiting action, closing websocket server')
+            self._server.close()
 
         async def start_action():
             async with websockets.serve(action, 'localhost', self._port) as server:

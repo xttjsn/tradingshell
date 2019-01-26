@@ -148,24 +148,26 @@ describe('Test server-client websocket communication', () => {
                 var i = 10;
                 var res = 1;
 
-                waitForSocketConnection(ws, () => {
-                  
                 ws.onmessage = (e) => {
-                  let msg = JSON.parse(e.data);
-                  let val = parseInt(msg.value);
-                  expect(val).to.equal(999);
-                  expect(val).to.equal(res * i);
-                  res *= i;
-                  i -= 1;
-                  if (i == 0) {
-                    expect(res).to.equal(3628800);
-                  }
-                  done();
+		  let msg = JSON.parse(e.data);
+		  let val = parseInt(msg);
+		  expect(val).to.equal(i);
+		  res *= i;
+		  i -= 1;
+		  if (i == 1) {
+		      expect(res).to.equal(3628800);
+		  }
+                  ws.close();
                 };
 
-                  
-                });
+                ws.onopen = () => {
+                  ws.send('READY');
+                };
 
+                ws.onclose = () => {
+                  ws.send('FINISHED');
+                  done();
+                };
 
               });
           });
