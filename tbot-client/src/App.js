@@ -26,7 +26,8 @@ class App extends Component {
       backtestStartDate: moment('2012-01-01'),
       backtestEndDate: moment('2018-01-01'),
       initCapital: 100000,
-      host: this.props.host
+      host: this.props.host,
+      selectedStrategy: 'SMA'
     };
 
   }
@@ -54,6 +55,18 @@ class App extends Component {
       initCapital: newCapital
     });
   }
+
+  changeStrategy = (algoName) => {
+    this.setState({
+      selectedStrategy: algoName
+    });
+
+    api.getAlgoCode(algoName)
+      .then(res => res.text())
+      .then(code => {
+        this.onCodeChange(code);
+      });
+  }
   
   render() {
     let strategyBoard = (<StrategyBoard
@@ -64,7 +77,9 @@ class App extends Component {
                            setInitCapital={this.setInitCapital}
                            backtestStartDate={this.state.backtestStartDate}
                            backtestEndDate={this.state.backtestEndDate}
-                           initCapital={this.state.initCapital}/>);
+                           initCapital={this.state.initCapital}
+                           changeStrategy={this.changeStrategy}
+                           selectedStrategy={this.state.selectedStrategy}/>);
     let performanceBoard = (<PerformanceBoard/>);
     return (
       <Layout left={strategyBoard} right={performanceBoard}/>

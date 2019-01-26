@@ -65,6 +65,8 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def options(self):
         logger.info('Received an OPTIONS request at {self.request.uri}')
+        self.set_status(204)
+        self.finish()
 
 class APIHandler(BaseHandler):
 
@@ -119,13 +121,14 @@ class APIHandler(BaseHandler):
             endpoint = self.request.uri.split('/')[-1]
             logger.info(f'Endoint: {endpoint}')
             action = self.actionMap[endpoint]
+            logger.info(f'body: {self.request.body}')
             json = tornado.escape.json_decode(self.request.body)
 
             try:
                 args = {k : json[k] for k in self.keyMap[endpoint]}
             except KeyError as e:
                 missingKey = e.args[0]
-                self.write(f'Missing key: {missingKey}')
+                self.write(f'Missing key: {missingKey}. Check the program')
                 return
 
             self.write(action(**args))

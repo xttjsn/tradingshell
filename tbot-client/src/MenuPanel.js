@@ -8,17 +8,6 @@ import './Panel.css';
 
 import 'rc-calendar/assets/index.css';
 
-const modalStyle = {
-  content: {
-    top                   : '50%',
-    left                  : '50%',
-    right                 : 'auto',
-    bottom                : 'auto',
-    marginRight           : '-50%',
-    transform             : 'translate(-50%, -50%)'
-  }
-};
-
 class MenuPanel extends Component {
   static propTypes = {
     backtestStartDate: PropTypes.object,
@@ -29,119 +18,37 @@ class MenuPanel extends Component {
     super(props);
 
     this.state = {
-      strategiesDropdownOpen: false,
-      backtestDropdownOpen: false,
-      modalOpen: false,
     };
-  }
-
-  strategiesDropdownToggle = () => {
-    this.setState({
-      strategiesDropdownOpen: !this.state.strategiesDropdownOpen
-    });
-  }
-
-  backtestDropdownToggle = () => {
-    this.setState({
-      backtestDropdownOpen: !this.state.backtestDropdownOpen
-    });
-  }
-
-  startDateOnClick = () => {
-    this.setState({
-      modalOpen: true,
-      calendarOpen: true,
-      calendarValue: this.props.backtestStartDate,
-      calendarOnChange: (newDate) => {
-        this.props.setBacktestStartDate(newDate);
-      }
-    });
-  }
-
-  endDateOnClick = () => {
-    this.setState({
-      modalOpen: true,
-      calendarOpen: true,
-      calendarValue: this.props.backtestEndDate,
-      calendarOnChange: (newDate) => {
-        this.props.setBacktestEndDate(newDate);
-      }
-    });
-  }
-
-  initCapOnClick = () => {
-    this.setState({
-      modalOpen: true,
-      capitalFormOpen: true
-    });
-  }
-
-  dismissModal = () => {
-    this.setState({
-      modalOpen: false,
-      calendarOpen: false,
-      capitalFormOpen: false
-    });
   }
   
   render() {
     
-    let modalContent;
-    if (this.state.calendarOpen) {
-      modalContent = <div className="text-align-center">
-                       <Calendar
-                         defaultValue={this.state.calendarValue}
-                         onChange={this.state.calendarOnChange}/>
-                       <Button className="margined"
-                               color='secondary'
-                               onClick={this.dismissModal}>Confirm</Button>
-                     </div>;
-    }
-    else if (this.state.capitalFormOpen) {
-      modalContent = <Form>
-                       <FormGroup className="text-align-center">
-                         <Label >Initial Capital</Label>
-                         <Input type="number"
-                                name="initCap"
-                                id="initCap"
-                                placeholder="100,000"
-                                onChange={this.props.setInitCapital}
-                                value={this.props.initCapital}/>
-                         <Button className="margined"
-                                 color='secondary'
-                                 onClick={this.dismissModal}>Confirm</Button>
-                       </FormGroup>
-                     </Form>;
-    }
+    var form = <Form>
+                 <FormGroup>
+                   <Label for='strategySelect'>Strategy</Label>
+                   <Input type='select' name='strategySelect' id='strategySelect' onChange={(e) => this.props.changeStrategy(e.target.value)} value={this.props.selectedStrategy}>
+                     <option value='SMA'>SMA</option>
+                     <option value='__TEST_FACTORIAL'>__TEST_FACTORIAL</option>
+                   </Input>
+                 </FormGroup>
+                 <FormGroup>
+                   <Label for='initDate'>Initial Date</Label>
+                   <Input type='date' name='initDate' id='initDate' defaultValue={this.props.backtestStartDate.format('YYYY-MM-DD')}/>
+                 </FormGroup>
+                 <FormGroup>
+                   <Label for='endDate'>End Date</Label>
+                   <Input type='date' name='endDate' id='endDate' value={this.props.backtestEndDate.format('YYYY-MM-DD')}/>
+                 </FormGroup>
+                 <FormGroup>
+                   <Label for='mode'>Backtest Mode</Label>
+                   <Input type='select' name='mode' id='modeSelect'>
+                     <option>GENERATOR</option>
+                     <option>Zipline</option>
+                   </Input>
+                 </FormGroup>
+               </Form>;
     
-    return (
-      <ButtonGroup className="margined">
-        <ButtonDropdown isOpen={this.state.strategiesDropdownOpen} toggle={this.strategiesDropdownToggle}>
-          <DropdownToggle caret id='dd_tgl_strategies' className='dd_tgl'>Strategies</DropdownToggle>
-          <DropdownMenu>
-            <DropdownItem id='dd_itm_sma' onClick={() => {this.props.loadAlgoCode('SMA');}}>SMA</DropdownItem>
-            <DropdownItem id='dd_itm_lma' onClick={() => {this.props.loadAlgoCode('LMA');}}>LMA</DropdownItem>
-          </DropdownMenu>
-        </ButtonDropdown>
-
-        <ButtonDropdown isOpen={this.state.backtestDropdownOpen} toggle={this.backtestDropdownToggle}>
-          <DropdownToggle caret>Backtest</DropdownToggle>
-          <DropdownMenu>
-            <DropdownItem onClick={this.startDateOnClick}>Start Date</DropdownItem>
-            <DropdownItem onClick={this.endDateOnClick}>End Date</DropdownItem>
-            <DropdownItem onClick={this.initCapOnClick}>Initial Capital</DropdownItem>
-            <DropdownItem onClick={this.props.runBacktest}>Run Backtest</DropdownItem>
-          </DropdownMenu>
-        </ButtonDropdown>
-
-        <Modal
-          isOpen={this.state.modalOpen}
-          style={modalStyle}
-          contentLabel="Example Modal">
-          {modalContent}
-        </Modal>
-      </ButtonGroup>
-    );
+    return form;
   }
 }
 

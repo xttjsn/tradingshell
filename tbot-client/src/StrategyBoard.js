@@ -8,19 +8,9 @@ import api from './API';
 class StrategyBoard extends Component {
   render() {
 
-    let loadAlgoCode = (codePanel, algoName) => {
-      api.getAlgoCode(algoName, this.props.isTesting ? 'http://localhost:9000' : null)
-        .then(res => res.text())
-        .then(code => {
-          this.props.onCodeChange(code);
-        });
-    };
-
     let codePanel = <CodePanel
                       code={this.props.algocode}
                       onCodeChange={this.props.onCodeChange}/>;
-
-    loadAlgoCode = loadAlgoCode.bind(this, codePanel);
     
     return (
       <div className={``}>
@@ -31,7 +21,8 @@ class StrategyBoard extends Component {
           backtestStartDate={this.props.backtestStartDate}
           backtestEndDate={this.props.backtestEndDate}
           initCapital={this.props.initCapital}
-          loadAlgoCode={loadAlgoCode}/>
+          changeStrategy={this.props.changeStrategy}
+          selectedStrategy={this.props.selectedStrategy}/>
         {codePanel}
       </div>
     );

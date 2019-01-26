@@ -5,7 +5,7 @@ class API {
     return fetch(host + '/api/newSession', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': "application/json",
       },
       body: JSON.stringify({
         dummy: 'dummy'
@@ -15,15 +15,13 @@ class API {
   
   getAlgoCode = (algoName, host) => {
     if (typeof host == 'undefined' || host == null) { host = ''; }
-    host = 'http://localhost:9000';
     return fetch(host + '/api/getAlgoCode', {
       method: 'POST',
-      headers : {
-        'Content-Type': 'application/json',
-        
+      headers: {
+        'Content-Type': "application/json",
       },
       body: JSON.stringify({
-        algoName: algoName
+        algoName: algoName,
       })
     });
   }
