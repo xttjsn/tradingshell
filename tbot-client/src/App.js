@@ -27,7 +27,8 @@ class App extends Component {
       backtestEndDate: moment('2018-01-01'),
       initCapital: 100000,
       host: this.props.host,
-      selectedStrategy: 'SMA'
+      selectedStrategy: 'SMA',
+      mode: 'GENERATOR'
     };
 
   }
@@ -67,6 +68,12 @@ class App extends Component {
         this.onCodeChange(code);
       });
   }
+
+  setMode = (newMode) => {
+    this.setState({
+      mode: newMode
+    });
+  }
   
   render() {
     let strategyBoard = (<StrategyBoard
@@ -79,7 +86,10 @@ class App extends Component {
                            backtestEndDate={this.state.backtestEndDate}
                            initCapital={this.state.initCapital}
                            changeStrategy={this.changeStrategy}
-                           selectedStrategy={this.state.selectedStrategy}/>);
+                           selectedStrategy={this.state.selectedStrategy}
+                           setMode={this.setMode}
+                           mode={this.state.mode}
+                         />);
     let performanceBoard = (<PerformanceBoard/>);
     return (
       <Layout left={strategyBoard} right={performanceBoard}/>
