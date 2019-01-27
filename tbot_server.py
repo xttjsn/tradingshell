@@ -92,8 +92,7 @@ class APIHandler(BaseHandler):
     def handleRunBacktest(self, session_id, algoCode, mode):
         # if there is already a backtest machine for the session,
         # stop the machine, and create a new machine
-        # ele
-        logger.debug('running handleBacktest')
+        logger.info('running handleBacktest')
         try:
             if session_id not in self._machineGroup:
                 bm = BacktestMachine(algoCode, mode)
@@ -105,10 +104,14 @@ class APIHandler(BaseHandler):
                     bm.stop()    
                 bm.restart(algoCode, mode)
         except Exception as e:
+            logger.error(f'Exceptino while handling runBacktest {e}')
+            logger.error(f'session_id: {session_id}')
+            logger.error(f'algoCode: {algoCode}')
+            logger.error(f'mode: {mode}')
             return e.args[0]
             
         ws_port = bm.getEndpoint()
-        logger.debug(f"ws_port : {ws_port}")
+        logger.info(f"ws_port : {ws_port}")
         return str(ws_port)
     
     def get(self):
@@ -162,6 +165,7 @@ class TBotApplication(tornado.web.Application):
     def newSession(self):
         newSessionId = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
         self._sessions.add(newSessionId)
+        logger.info(f'newSession: {newSessionId}')
         return newSessionId
 
 def main():

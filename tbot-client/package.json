@@ -12,6 +12,7 @@
     "enzyme": "^3.8.0",
     "enzyme-adapter-react-16": "^1.7.1",
     "moment": "^2.23.0",
+    "node-fetch": "^2.3.0",
     "prop-types": "^15.6.2",
     "rc-calendar": "^9.10.6",
     "react": "^16.7.0",

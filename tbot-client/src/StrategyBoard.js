@@ -45,10 +45,11 @@ class StrategyBoard extends Component {
             <Input type='select' name='mode' id='modeSelect'
                    onChange={(e) => this.props.setMode(e.target.value)}
                    value={this.props.mode}>
-              <option>GENERATOR</option>
-              <option>Zipline</option>
+              <option value='GENERATOR_MODE'>GENERATOR</option>
+              <option value='ZIPLINE_MODE'>Zipline</option>
             </Input>
           </FormGroup>
+          <Button onClick={this.props.runBacktest}>Run</Button>
         </Form>
         <CodePanel
           code={this.props.algocode}

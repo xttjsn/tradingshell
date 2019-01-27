@@ -120,6 +120,8 @@ class WebsocketServerConsumer(Consumer):
                 self._server.close()
                 return
 
+            logger.info(f'Waiting for client sending ready signal');
+            
             ready = ''
             while ready != 'READY':
                 ready = await websocket.recv()
@@ -132,6 +134,8 @@ class WebsocketServerConsumer(Consumer):
                 print(f'Websocket is in {websocket.state}')
                 await websocket.send(str(msg))
 
+            await websocket.send('end')
+                
             finished = ''
             while finished != 'FINISHED':
                 finished = await websocket.recv()
@@ -144,9 +148,12 @@ class WebsocketServerConsumer(Consumer):
                 self._server = server
                 await server.wait_closed()
 
-        self._loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self._loop)
-        self._loop.run_until_complete(start_action())
+        try:
+            self._loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._loop)
+            self._loop.run_until_complete(start_action())
+        except websockets.exceptions.ConnectionClosed as e:
+            logger.info('Websocket closed abruptly by client')
 
 class BacktestMachine(object):
 
@@ -168,8 +175,16 @@ class BacktestMachine(object):
         self._producer.start()
         self._consumer.start()
 
+    def restart(self, newCode, newMode):
+        self._producer = BacktestMachine._producer_types[newMode](self._endp, newCode)
+        self._consumer = WebsocketServerConsumer(self._endp, self._port)
+        self.start()
+
     def stop(self):
         self._producer.stop()
         self._consumer.stop()
         self._producer.join()
         self._consumer.join()
+
+    def stopped(self):
+        return not self._producer.is_alive() and not self._consumer.is_alive()

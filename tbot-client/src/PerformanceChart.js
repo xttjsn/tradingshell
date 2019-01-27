@@ -30,8 +30,8 @@ function tooltipContent(ys) {
       x: dateFormat(xAccessor(currentItem)),
       y: [
         {
-          label: "close",
-          value: currentItem.close && numberFormat(currentItem.close)
+          label: "val",
+          value: currentItem.val && numberFormat(currentItem.val)
         }
       ]
         .concat(
@@ -46,7 +46,7 @@ function tooltipContent(ys) {
   };
 }
 
-const keyValues = ["high", "low"];
+const keyValues = ["val"];
 
 class PerformanceChart extends React.Component {
 
@@ -73,7 +73,7 @@ class PerformanceChart extends React.Component {
         ratio={ratio}
         margin={margin}
         type={type}
-        seriesName="MSFT"
+        seriesName="Performance Series"
         data={data}
         xScale={xScale}
         xAccessor={xAccessor}
@@ -82,14 +82,14 @@ class PerformanceChart extends React.Component {
       >
         <Chart
           id={1}
-          yExtents={[d => [d.high, d.low]]}
+          yExtents={[d => [d.val]]}
           padding={{ top: 10, bottom: 20 }}
         >
           <XAxis axisAt="bottom" orient="bottom" />
 
           <YAxis axisAt="left" orient="left" ticks={10} />
 
-          <LineSeries yAccessor={d => d.open}/>
+          <LineSeries yAccessor={d => d.val}/>
 
           <CrossHairCursor />
           
@@ -107,12 +107,12 @@ class PerformanceChart extends React.Component {
             itemType="last"
             orient="right"
             edgeAt="right"
-            yAccessor={d => d.close}
-            fill={d => (d.close > d.open ? "#6BA583" : "#FF0000")}
+            yAccessor={d => d.val}
+            fill={d => ("#6BA583")}
           />
 
           <HoverTooltip
-            yAccessor={d => d.close}
+            yAccessor={d => d.val}
             tooltipContent={tooltipContent([])}
             fontSize={15}
           />

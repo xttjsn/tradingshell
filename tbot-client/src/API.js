@@ -67,7 +67,6 @@ class API {
       })
     }).then(res => res.text())
       .then(wsport => { // This is the port that runs websocket server
-        
         var host = window.location.hostname;
         var ws = new WebSocket('ws:' + host + ':' + wsport);
         return ws;
