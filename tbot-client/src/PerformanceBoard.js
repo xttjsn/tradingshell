@@ -17,7 +17,7 @@ class PerformanceBoard extends Component {
           <PerformanceChart data={this.props.dataSeries} width={500} ratio={0.8}/>          
         </Row>
         <Row>
-          <LoggingPanel/>
+          <LoggingPanel logs={this.props.logs}/>
         </Row>
       </Container>
 

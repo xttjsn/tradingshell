@@ -13,6 +13,7 @@ class LoggingPanel extends Component {
             id='logArea'
             disabled={true}
             style={{ width: '500px', height: '300px'}}
+            value={this.props.logs.join('\n')}
           />
         </FormGroup>
       </Form>

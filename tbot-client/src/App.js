@@ -30,7 +30,8 @@ class App extends Component {
       host: this.props.host,
       selectedStrategy: 'SMA',
       mode: 'GENERATOR_MODE',
-      performanceSeries: []
+      performanceSeries: [],
+      logs: []
     };
 
   }
@@ -77,9 +78,16 @@ class App extends Component {
     });
   }
 
+  log = (newLog) => {
+    this.setState({
+      logs: this.state.logs.concat([newLog])
+    });
+  }
+
   updatePerformance = (e) => {
     console.log('receive message ');
     console.log(e.data);
+    this.log('recived message');
 
     try {
       let msg = e.data;
@@ -155,7 +163,8 @@ class App extends Component {
                            mode={this.state.mode}
                          />);
     let performanceBoard = (<PerformanceBoard
-                              dataSeries={this.state.performanceSeries}/>);
+                              dataSeries={this.state.performanceSeries}
+                              logs={this.state.logs}/>);
     return (
       <Layout left={strategyBoard} right={performanceBoard}/>
      );
