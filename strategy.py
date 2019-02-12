@@ -52,5 +52,15 @@ class StrategyLoader(object):
             return strategy.code
         except Exception as e:
             logger.error(f'Exception happens while loading startegy {algoName}: {e}')
-                
+
+    @staticmethod
+    def loadAllStrategyNames():
+        logger.info(f'loading all algo names')
         
+        try:
+            p = pathlib.Path(__file__).parents[0].joinpath('static/algo').glob('*.py')
+            names = [f.parts[-1].split('.')[0] for f in p if f.is_file()]
+            return names
+        except Exception as e:
+            logger.error(f'Exception happens while loading all strategy names: {e}')
+            

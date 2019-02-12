@@ -76,13 +76,15 @@ class APIHandler(BaseHandler):
             'getAlgoCode' : UnboundAction(StrategyLoader.loadStrategy),
             'verifySubmit' : UnboundAction(lambda algoCode: hashAlgo(algoCode, 'SHA256')),
             'runBacktest' : UnboundAction(self.handleRunBacktest.__get__(self)),
-            'newSession' : self._newSession
+            'newSession' : self._newSession,
+            'getAllAlgo' : UnboundAction(StrategyLoader.loadAllStrategyNames)
         }
         self.keyMap = {
             'getAlgoCode' : ['algoName'],
             'verifySubmit' : ['algoCode'],
             'runBacktest' : ['session_id', 'algoCode', 'mode'],
-            'newSession' : []
+            'newSession' : [],
+            'getAllAlgo' : []
         }
 
     def initialize(self, machineGroup, newSession):

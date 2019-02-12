@@ -8,6 +8,8 @@ from abc import ABCMeta, abstractmethod
 from util import getFreePort
 import logging
 import sys
+from zipline.utils.run_algo import _run
+import pandas as pd
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -107,6 +109,67 @@ class GeneratorProducer(Producer):
 
         self.end()
 
+
+class ZiplineProducer(Producer):
+
+    def __init__(self, endpoint, code):
+        super(ZiplineProducer, self).__init__(endpoint)
+
+        spy_init_code = """
+import inspect
+stacks = inspect.stack()
+
+producer_proxy = None
+while stacks:
+    stacks, stack = stacks[1:], stack[0]
+    frame, filename, lineno, func, code_ctx, index = stack
+    if stack.f_locals['producer_proxy']:
+        producer_proxy = stack.f_locals['producer_proxy']
+        break
+if producer_proxy == None:
+    raise Error('Cannot find any stack that has producer_proxy')
+
+context.producer_proxy = producer_proxy
+        """
+
+        spy_send_code = """
+context.producer_proxy.send(perf)
+"""
+
+        
+        
+
+    def _produce(self):
+
+        producer_proxy = self
+        perf = _run(
+            handle_data=None,
+            initialize=None,
+            before_trading_start=None,
+            analyze=None,
+            algofile='<string>',
+            algotext=self._algocode,
+            defines=(),
+            data_frequency='daily',
+            capital_base=1000000,
+            bundle='qunadl',
+            bundle_timestamp=pd.Timestamp.utcnow(),
+            start=start,
+            end=end,
+            output='-',
+            trading_calendar=get_calendar('XNYS'),
+            print_algo=False,
+            metrics_set='default',
+            local_namespace=None,
+            environ=os.environ,
+            blotter='default',
+            benchmark_returns=None
+        )
+
+    def send(self, perf):
+        pass
+            
+
 class WebsocketServerConsumer(Consumer):
 
     def __init__(self, endpoint, port):
@@ -159,7 +222,7 @@ class BacktestMachine(object):
 
     _producer_types = {
         'GENERATOR_MODE' : GeneratorProducer,
-        # 'ZIPLINE_MODE' : ZiplineProducer
+        'ZIPLINE_MODE' : ZiplineProducer
     }
 
     def __init__(self, code, mode='GENERATOR_MODE'):

@@ -12,13 +12,26 @@ class API {
       })
     });
   }
+
+  getAllAlgo = (host) => {
+    if (typeof host == 'undefined' || host == null) { host = ''; }
+    return fetch(host + '/api/getAllAlgo', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        dummy: 'dummy'
+      })
+    });
+  }
   
   getAlgoCode = (algoName, host) => {
     if (typeof host == 'undefined' || host == null) { host = ''; }
     return fetch(host + '/api/getAlgoCode', {
       method: 'POST',
       headers: {
-        'Content-Type': "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         algoName: algoName,

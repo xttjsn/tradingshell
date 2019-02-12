@@ -17,6 +17,8 @@ class App extends Component {
           session_id: session_id
         });
       });
+
+
   }
   
   constructor(props) {
