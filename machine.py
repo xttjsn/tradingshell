@@ -112,34 +112,54 @@ class GeneratorProducer(Producer):
 
 class ZiplineProducer(Producer):
 
-    def __init__(self, endpoint, code):
+    def __init__(self, endpoint, code, start, end):
         super(ZiplineProducer, self).__init__(endpoint)
 
+        self._start = start
+        self._end = end
+
         spy_init_code = """
-import inspect
-stacks = inspect.stack()
+    import inspect
+    stacks = inspect.stack()
 
-producer_proxy = None
-while stacks:
-    stacks, stack = stacks[1:], stack[0]
-    frame, filename, lineno, func, code_ctx, index = stack
-    if stack.f_locals['producer_proxy']:
-        producer_proxy = stack.f_locals['producer_proxy']
-        break
-if producer_proxy == None:
-    raise Error('Cannot find any stack that has producer_proxy')
-
-context.producer_proxy = producer_proxy
+    producer_proxy = None
+    while stacks:
+        stacks, stack = stacks[1:], stack[0]
+        frame, filename, lineno, func, code_ctx, index = stack
+        if stack.f_locals['producer_proxy']:
+            producer_proxy = stack.f_locals['producer_proxy']
+            break
+    if producer_proxy == None:
+        raise Error('Cannot find any stack that has producer_proxy')
+    
+    context.producer_proxy = producer_proxy
         """
 
-        spy_send_code = """
-context.producer_proxy.send(perf)
-"""
+        spy_action_code = """
+    context.producer_proxy.send(context.portfolio)
+        """
 
-        
-        
+        code = code.split('\n')
+        try:
+            i = list(filter(lambda x: 'def initialize' in x[1], enumerate(code)))[0][0]
+            code.insert(i + 1, spy_init_code)
+
+            j = list(filter(lambda x: 'def handle_data' in x[1], enumerate(code)))[0][0]
+            code.insert(j + 1, spy_action_code)
+
+            self._algocode = '\n'.join(code)
+
+            self._initSuccess = True
+            
+        except Error as e:
+            logger.error('Failed to failed <initialize> or <handle_data> in code')
+            self._initSuccess = False
 
     def _produce(self):
+
+        if not self._initSuccess:
+            logger.info('Failed to initialize zipline producer, exiting..')
+            return
 
         producer_proxy = self
         perf = _run(
@@ -151,11 +171,11 @@ context.producer_proxy.send(perf)
             algotext=self._algocode,
             defines=(),
             data_frequency='daily',
-            capital_base=1000000,
+            capital_base=10000000,
             bundle='qunadl',
             bundle_timestamp=pd.Timestamp.utcnow(),
-            start=start,
-            end=end,
+            start=self._start,
+            end=self._end,
             output='-',
             trading_calendar=get_calendar('XNYS'),
             print_algo=False,
@@ -166,8 +186,12 @@ context.producer_proxy.send(perf)
             benchmark_returns=None
         )
 
-    def send(self, perf):
-        pass
+    def send(self, portfolio):
+
+        if self._stopRequired:
+            return
+
+        self.give(portfolio.portfolio_value)
             
 
 class WebsocketServerConsumer(Consumer):
