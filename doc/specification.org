@@ -1,0 +1,78 @@
+* TradingShell 
+All outputs are json string
+** Backtest
+*** backtest/b zipline ./algo.py [name]
+Starts another thread to run backtest and direct the output to shell stdout. When
+given, name identifies this run.
+
+*** backtest/b zipline ./algo.py | record
+Record the running result of algo.py in an entry in database, will
+throw an error if db is not yet connected. Entries are like:
+
+| RunID | Timestamp | Name | Portfolios | Perf |
+|-------+-----------+------+------------+------|
+| ...   | ...       | ...  | ...        |      |
+
+RunID is a 64-bit random string, but shown as a 8 character hash.
+  
+*** backtest/b zipline ./algo.py | plot/p
+Starts another thread and direct the output to both stdout and an http
+server which serves the plot. The http server automatically terminates
+itself after all data's sent
+*** backtest/b zipline ./algo.py | record | plot
+
+** Service
+*** service/s zipline ./algo.py
+Starts another thread and direct the output to shell stdout. When all
+dates in the local database are processed, it does not
+terminate. Rather, it became an independent service (also indepedent
+from the sell!). On any open days, it fetchs data from some data
+source and runs another iteration of data processing (i.e. buys and
+sells). All of its portfolio data is written to stdout. It inherits
+all usage from 'backtest'. Each service will have a unique ID.
+*** service/s list
+List all the services running in background
+*** service/s get <service id>
+
+** Record
+*** record/r [-<idx>] [name]
+Record the output from last run in db. idx=-1 means the previous run, idx=-2
+means the one before that. When idx is not given, record the previous
+run.
+
+** Plot
+*** plot/p [-<idx>]
+Plot the last <idx> run. The http sever automatically terminates
+itself after all data's plotted.
+
+** Hist
+*** hist/h <name|runID|-idx|service id>
+Read an entire run history from database, direct the output to
+stdout. What you can do later is, say, "hist SMA | plot"
+
+** Trade
+*** trade/t [broker <paper|ib|...>] zipline ./algo.py
+Launch a trader, using broker <paper|ib|...>, using engine 'zipline',
+using strategy ./algo.py. This will launch a process that execute
+orders as given by the engine. All the portfolio result will be
+written to stdout.
+
+** Account
+*** account/a create <paper|ib|...> "Bob"
+Create an account under broker <paper|ib|...> named "Bob"
+
+*** account/a update [<paper|ib|...>] "Bob" cash [+-]800000
+Give Bob account another 800000 dollars. Will fail for real brokers.
+
+*** TODO account/a sync "Bob" <ib|...> <credentials>
+
+
+
+** Db
+*** db connect [port]
+Connects to mongodb.
+
+*** db disconnect
+Disconnect from mongodb.
+
+*** db 
