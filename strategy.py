@@ -1,8 +1,10 @@
 """Strategy
 """
+# pylint: disable=C,R,I
 import pathlib
 import logging
 import sys
+import json
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -34,15 +36,14 @@ class StrategyLoader(object):
     """
     @staticmethod
     def loadStrategy(algoName=None, **kwargs):
-        if algoName == None:
+        if algoName is None:
             return ''
 
-        logger.info(f'loading algo {algoName}')
-        
-        #### DBEUG
+        logger.info('loading algo {}'.format(algoName))
+        # DBEUG
         if algoName == 'testAlgo':
             return "print('Test code')"
-        #### End DEBUG
+        # End DEBUG
 
 
         path = pathlib.Path(__file__).parents[0].joinpath('static/algo/' + algoName + '.py')
@@ -51,16 +52,16 @@ class StrategyLoader(object):
             strategy = Strategy(path=path)
             return strategy.code
         except Exception as e:
-            logger.error(f'Exception happens while loading startegy {algoName}: {e}')
+            logger.error('Exception happens while loading startegy {}: {}'.format(algoName, e))
 
     @staticmethod
     def loadAllStrategyNames():
-        logger.info(f'loading all algo names')
+        logger.info('loading all algo names')
         
         try:
             p = pathlib.Path(__file__).parents[0].joinpath('static/algo').glob('*.py')
             names = [f.parts[-1].split('.')[0] for f in p if f.is_file()]
-            return names
+            return {'StrategyNames': names}
         except Exception as e:
-            logger.error(f'Exception happens while loading all strategy names: {e}')
+            logger.error('Exception happens while loading all strategy names: {}'.format(e))
             

@@ -1,14 +1,17 @@
 """High level abstraction of the logic of running a backtest - BacktestMachine
 """
+# pylint: disable=C,R,I
 from threading import Thread
 from queue import Queue
 import asyncio
 import websockets
 from abc import ABCMeta, abstractmethod
 from util import getFreePort
+import os
 import logging
 import sys
 from zipline.utils.run_algo import _run
+from trading_calendars import get_calendar
 import pandas as pd
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -86,7 +89,7 @@ class GeneratorProducer(Producer):
         def noop(*args, **kwargs):
             pass
 
-        logger.debug(f'code={code}')
+        logger.debug('code={}'.format(code))
         
         self._gen = self._namespace.get('gen', noop)
 
@@ -112,11 +115,12 @@ class GeneratorProducer(Producer):
 
 class ZiplineProducer(Producer):
 
-    def __init__(self, endpoint, code, start, end):
+    def __init__(self, endpoint, code, start='2012-01-01', end='2018-12-01', capital_base=10000000):
         super(ZiplineProducer, self).__init__(endpoint)
 
         self._start = start
         self._end = end
+        self._capital_base = capital_base
 
         spy_init_code = """
     import inspect
@@ -151,7 +155,7 @@ class ZiplineProducer(Producer):
 
             self._initSuccess = True
             
-        except Error as e:
+        except Exception as e:
             logger.error('Failed to failed <initialize> or <handle_data> in code')
             self._initSuccess = False
 
@@ -171,7 +175,7 @@ class ZiplineProducer(Producer):
             algotext=self._algocode,
             defines=(),
             data_frequency='daily',
-            capital_base=10000000,
+            capital_base=self._capital_base,
             bundle='qunadl',
             bundle_timestamp=pd.Timestamp.utcnow(),
             start=self._start,
@@ -207,18 +211,18 @@ class WebsocketServerConsumer(Consumer):
                 self._server.close()
                 return
 
-            logger.info(f'Waiting for client sending ready signal');
+            logger.info('Waiting for client sending ready signal');
             
             ready = ''
             while ready != 'READY':
                 ready = await websocket.recv()
 
-            logger.info(f'Consumer receives ready signal.')
+            logger.info('Consumer receives ready signal.')
             
             for msg in self.take():
                 
-                logger.info(f'Received msg: {msg} from Producer, sending it to client')
-                print(f'Websocket is in {websocket.state}')
+                logger.info('Received msg: {msg} from Producer, sending it to client')
+                print('Websocket is in {}'.format(websocket.state))
                 await websocket.send(str(msg))
 
             await websocket.send('end')
@@ -249,11 +253,12 @@ class BacktestMachine(object):
         'ZIPLINE_MODE' : ZiplineProducer
     }
 
-    def __init__(self, code, mode='GENERATOR_MODE'):
+    def __init__(self, code, params={}, mode='GENERATOR_MODE'):
         self._endp = Endpoint()
         self._port = getFreePort()
-        self._producer = BacktestMachine._producer_types[mode](self._endp, code)
+        self._producer = BacktestMachine._producer_types[mode](self._endp, code, **params)
         self._consumer = WebsocketServerConsumer(self._endp, self._port)
+        self._params = params
 
     def getEndpoint(self):
         return self._port
@@ -262,8 +267,10 @@ class BacktestMachine(object):
         self._producer.start()
         self._consumer.start()
 
-    def restart(self, newCode, newMode):
-        self._producer = BacktestMachine._producer_types[newMode](self._endp, newCode)
+    def restart(self, newCode, newMode, params={}):
+        if len(params) == 0:
+            params = self._params
+        self._producer = BacktestMachine._producer_types[newMode](self._endp, newCode, **params)
         self._consumer = WebsocketServerConsumer(self._endp, self._port)
         self.start()
 
@@ -275,3 +282,43 @@ class BacktestMachine(object):
 
     def stopped(self):
         return not self._producer.is_alive() and not self._consumer.is_alive()
+
+
+if __name__ == '__main__':
+    # python tin.py run zipline < algo.py | python tin.py -plot
+    # tin run zipline < algo.py | tin -plot
+    # tin run zipline -s 2012-01-01 -e 2018-12-12 < algo.py | tin plot
+    #
+    #
+    #
+    # nit run zipline algo1.py algo2.py algo3.py algo4.py -p
+    #
+    # import machine
+    # import plotter
+    # m = ZiplineMachine()
+    # m.run('algo.py')
+    # plotter.plot(m.output)
+    #
+    # run/liverun/maintain/show/dialog/livehost/dayrun/runasday/serve/runlive/run-live/
+    # runday/exp/experiment/start/service/many/run-many/run-longterm/run-mini/run-persist/
+    # run-live/run-real/run -realtime/service -realtime
+    #
+    # There's a difference between "run" and "service"
+    #
+    # >> run zipline ./algo.py
+    # Starts another thread and direct the output to shell stdout
+    # >> run zipline ./algo.py -plot
+    # Starts another thread and direct the output to a http server which serves the plot, the http server automatically terminates after all data's sent
+    #
+    # >>
+    #
+    # >> help
+    #    Commands:
+    # clear       clear the screen
+    # client      Prints the pool's current client
+    # debug       Turn debug statements on or off
+    # exit        exit the program
+    # help        display help
+    # miners      Prints the miner(s) connected to the pool
+
+

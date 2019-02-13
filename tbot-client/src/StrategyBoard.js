@@ -16,6 +16,11 @@ class StrategyBoard extends Component {
   
   render() {
 
+    let algoItems = [];
+    for (let i = 0; i < this.props.algoNames.length; i++) {
+      algoItems.push(<option value={this.props.algoNames[i]}>{this.props.algoNames[i]}</option>);
+    }
+    
     return (
       <div className={``}>
         <Form>
@@ -24,8 +29,8 @@ class StrategyBoard extends Component {
             <Input type='select' name='strategySelect' id='strategySelect'
                    onChange={(e) => this.props.changeStrategy(e.target.value)}
                    value={this.props.selectedStrategy}>
-              <option value='SMA'>SMA</option>
               <option value='__TEST_FACTORIAL'>__TEST_FACTORIAL</option>
+              {algoItems}
             </Input>
           </FormGroup>
           <FormGroup>

@@ -18,7 +18,12 @@ class App extends Component {
         });
       });
 
-
+    api.getAllAlgo()
+      .then(names => {
+        this.setState({
+          algoNames: names
+        });
+      });
   }
   
   constructor(props) {
@@ -33,7 +38,8 @@ class App extends Component {
       selectedStrategy: 'SMA',
       mode: 'GENERATOR_MODE',
       performanceSeries: [],
-      logs: []
+      logs: [],
+      algoNames: []
     };
 
   }
@@ -163,6 +169,7 @@ class App extends Component {
                            runBacktest={this.runBacktest}
                            setMode={this.setMode}
                            mode={this.state.mode}
+                           algoNames={this.state.algoNames}
                          />);
     let performanceBoard = (<PerformanceBoard
                               dataSeries={this.state.performanceSeries}

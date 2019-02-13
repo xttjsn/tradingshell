@@ -75,7 +75,7 @@ class APIHandler(BaseHandler):
         self.actionMap = {
             'getAlgoCode' : UnboundAction(StrategyLoader.loadStrategy),
             'verifySubmit' : UnboundAction(lambda algoCode: hashAlgo(algoCode, 'SHA256')),
-            'runBacktest' : UnboundAction(self.handleRunBacktest.__get__(self)),
+            'runBacktest' : UnboundAction(self.handleRunBacktest),
             'newSession' : self._newSession,
             'getAllAlgo' : UnboundAction(StrategyLoader.loadAllStrategyNames)
         }
@@ -106,14 +106,14 @@ class APIHandler(BaseHandler):
                     bm.stop()    
                 bm.restart(algoCode, mode)
         except Exception as e:
-            logger.error(f'Exceptino while handling runBacktest {e}')
-            logger.error(f'session_id: {session_id}')
-            logger.error(f'algoCode: {algoCode}')
-            logger.error(f'mode: {mode}')
+            logger.error('Exceptino while handling runBacktest {}'.format(e))
+            logger.error('session_id: {}'.format(session_id))
+            logger.error('algoCode: {}'.format(algoCode))
+            logger.error('mode: {}'.format(mode))
             return e.args[0]
             
         ws_port = bm.getEndpoint()
-        logger.info(f"ws_port : {ws_port}")
+        logger.info("ws_port : {}".format(ws_port))
         return str(ws_port)
     
     def get(self):
@@ -122,24 +122,27 @@ class APIHandler(BaseHandler):
 
     def post(self):
         try:
-            logger.info(f'Received a POST request at {self.request.uri}')
+            logger.info('Received a POST request at {}'.format(self.request.uri))
             endpoint = self.request.uri.split('/')[-1]
-            logger.info(f'Endoint: {endpoint}')
+            logger.info('Endoint: {}'.format(endpoint))
             action = self.actionMap[endpoint]
-            logger.info(f'body: {self.request.body}')
+            logger.info('body: {}'.format(self.request.body))
             json = tornado.escape.json_decode(self.request.body)
 
             try:
-                args = {k : json[k] for k in self.keyMap[endpoint]}
+                _ = {k : json[k] for k in self.keyMap[endpoint]}
             except KeyError as e:
                 missingKey = e.args[0]
-                self.write(f'Missing key: {missingKey}. Check the program')
+                self.write('Missing key: {}. Check the program'.format(missingKey))
                 return
 
-            self.write(action(**args))
+            self.write(action(**json))
             
         except Exception as e:
-            logger.error(f'Exception happens while handling {endpoint}: {e}')
+            logger.error('Exception happens while handling {}: {}'.format(endpoint, e))
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
 
 class TBotApplication(tornado.web.Application):
     def __init__(self):
@@ -149,7 +152,7 @@ class TBotApplication(tornado.web.Application):
         handlers = [
             (r'/api/.*', APIHandler, {
                 'machineGroup' : self._machineGroup,
-                'newSession' : lambda : self.newSession.__get__(self)()
+                'newSession' : UnboundAction(self.newSession)
             } )
         ]
 
@@ -167,7 +170,7 @@ class TBotApplication(tornado.web.Application):
     def newSession(self):
         newSessionId = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
         self._sessions.add(newSessionId)
-        logger.info(f'newSession: {newSessionId}')
+        logger.info('newSession: {}'.format(newSessionId))
         return newSessionId
 
 def main():

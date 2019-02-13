@@ -23,7 +23,9 @@ class API {
       body: JSON.stringify({
         dummy: 'dummy'
       })
-    });
+    })
+      .then(res => res.text())
+      .then(res => JSON.parse(res).StrategyNames);
   }
   
   getAlgoCode = (algoName, host) => {
