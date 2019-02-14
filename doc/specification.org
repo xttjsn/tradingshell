@@ -66,8 +66,6 @@ Give Bob account another 800000 dollars. Will fail for real brokers.
 
 *** TODO account/a sync "Bob" <ib|...> <credentials>
 
-
-
 ** Db
 *** db connect [port]
 Connects to mongodb.
