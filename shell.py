@@ -20,9 +20,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from collections import namedtuple
+from util import getFreePort
 
 BLKSZ = 1024
 COMMAND_FUNC_PREFIX = 'do_'
+MSG_SEP = r'\xab'
 
 def with_argparser(argparser: argparse.ArgumentParser):
     import functools
@@ -312,65 +314,31 @@ class TradingShell(MyCmd):
     def db(self, arg, inPipe=None, outPipe=1):
         pass
 
+class PipeReader():
+    def __init__(self, pipe, sep):
+        self.pipe = pipe
+        self.sep = sep
 
-class FuncThread():
-    def __init__(self, runnable):
-        self.runnable = runnable
+    def __iter__(self):
+        return self
 
-    def run(self):
-        self.runnable()
+    def __next__(self):
+        """
+            Read from pipe
+        """
 
+        current_buf = b''
+        dirty_buf = b''
+        while self.pipe:
+            if self.sep in dirty_buf:
+                current_buf += dirty_buf.split(self.sep)[0]
+                dirty_buf = dirty_buf[dirty_buf.find(self.sep)+1:]
+                yield current_buf
+                continue
 
-class ThreadManager():
-    def __init__(self):
-        self.thmap = {}
-
-    def start(self, name, func):
-        throbj = FuncThread(func)
-        self.thmap[name] = throbj
-
-
-class WebPlotter():
-    def plot(self, inPipe, outPipe=1):
-        async def action(websocket, path):
-            if self._stopRequired:
-                self._server.close()
-                return
-
-            print('Waiting for client sending ready signal');
-            
-            ready = ''
-            while ready != 'READY':
-                ready = await websocket.recv()
-
-            print('Consumer receives ready signal.')
-            
-            for msg in DataModel:
-                
-                print('Received msg: {msg} from Producer, sending it to client'.format(msg=msg))
-                print('Websocket is in {}'.format(websocket.state))
-                await websocket.send(str(msg))
-
-            await websocket.send('end')
-                
-            finished = ''
-            while finished != 'FINISHED':
-                finished = await websocket.recv()
-
-            print('exiting action, closing websocket server')
-            self._server.close()
-
-        async def start_action():
-            async with websockets.serve(action, 'localhost', port) as server:
-                await server.wait_closed()
-
-        try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(start_action())
-        except websockets.exceptions.ConnectionClosed as e:
-            print(e)
-            os.exit(1)
+            dirty_buf = os.read(self.pipe, BLKSZ)
+            if not dirty_buf:
+                break
 
 class DBManager():
     def __init__(self):
@@ -418,9 +386,7 @@ class DisplayManager():
         # 'returns', 'start_date', 'starting_cash'
 
 DisplayInitMessage = namedtuple('DisplayInitMessage',
-                                'title xlabel numseries')
-
-
+                                'title xlabel')
 
 PortfolioUpdateMessage = namedtuple('PortfolioUpdateMessage',
                                     'portfolio_value pnl returns')

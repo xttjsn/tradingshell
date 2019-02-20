@@ -14,7 +14,13 @@ class PerformanceBoard extends Component {
     return (
       <Container>
         <Row>
-          <PerformanceChart data={this.props.dataSeries} width={500} ratio={0.8}/>          
+          <PerformanceChart
+            data={this.props.dataSeries}
+            width={500}
+            ratio={0.8}
+            title={this.props.title}
+            xlabel={this.props.xlabel}
+          />          
         </Row>
         <Row>
           <LoggingPanel logs={this.props.logs}/>

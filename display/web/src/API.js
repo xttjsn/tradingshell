@@ -1,5 +1,20 @@
 class API {
 
+  getPlotWebsocket = (host) => {
+    if (typeof host == 'undefined' || host == null) { host = ''; }
+    return fetch(host + '/plot', {
+      method: 'GET',
+    })
+      .then(res => res.text())
+      .then(data => JSON.parse(data))
+      .then(jsondata => jsondata.port)
+      .then(wsport => {
+        var host = window.location.hostname;
+        var ws = new WebSocket('ws:' + host + ':' + wsport.toString());
+        return ws;
+      });
+  }
+
   newSession = (host) => {
     if (typeof host == 'undefined' || host == null) { host = ''; }
     return fetch(host + '/api/newSession', {

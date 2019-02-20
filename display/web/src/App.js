@@ -8,6 +8,10 @@ import api from './API';
 // A display for showing the portfolio changes
 class App extends Component {
 
+  componentDidMount() {
+    this.connect();
+  }
+
   constructor(props) {
     super(props);
 
@@ -15,6 +19,7 @@ class App extends Component {
       host: this.props.host,
       performanceSeries: [],
       logs: [],
+      title: "Performance Series"
     };
 
   }
@@ -30,26 +35,17 @@ class App extends Component {
     // Keep the old series in a map.
   }
 
-  someFunctionToCall = () => {
+  connect = () => {
     if (this.state.backtestWebsocket) {
       this.state.backtestWebsocket.close();
     }
     
-      api.runBacktest(this.state.algocode,
-                    this.state.mode,
-                    this.state.session_id)
-      .then(ws => {
-        
+    api.getPlotWebsocket() 
+      .then(ws => {        
         this.setState({
           backtestWebsocket: ws
         });
-        
         ws.onmessage = this.updatePerformance;
-        
-        ws.onopen = () => {
-          ws.send('READY');
-        };
-
       }); 
   }
    
@@ -59,43 +55,63 @@ class App extends Component {
     this.log('recived message');
 
     try {
-      let msg = e.data;
-      if (msg == 'end') {
-        this.state.backtestWebsocket.send('FINISHED');
-        this.state.backtestWebsocket.close();
-      }
-      else {
-        let val = parseInt(msg);
+      let msg = JSON.parse(e.data);
 
-        if (this.state.performanceSeries.length == 0) {
-          this.setState({
-            performanceSeries: [{
-              date: this.state.backtestStartDate.toDate(),
-              val: val
-            }]
-          });
-        } else {
-          let len = this.state.performanceSeries.length;
-          let lastDataPoint = this.state.performanceSeries[len - 1];
-          let newDate = new Date(lastDataPoint.date);
-          newDate.setDate(newDate.getDate() + 1);
-          let newSeries = this.state.performanceSeries.concat([{date: newDate, val: val}]);
-          this.setState({
-            performanceSeries: newSeries
-          });
-        }      
-    }
+      switch (msg.type) {
+      case 'Init':
+        // Set up the plot with parameters
+        let title = msg.title;
+        let xlabel = msg.xlable;
+        let lastDate = new Date(msg.startDate);
+        lastDate.setDate(lastDate.getDate() - 1);
+        this.setState({
+          lastDate: lastDate,
+          title: title,
+          xlabel: xlabel
+        });
+
+        break;
+      case 'Update':
+        // Update the plot with a new data point
+        let portfolioValue = parseFloat(msg.portfolioValue);
+        let pnl = parseFloat(msg.pnl);
+        let returnVal = parseFloat(msg.return);
+
+        let nextDate = new Date(this.state.lastDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+        let newSeries = this.state.performanceSeries.concat([{date: nextDate,
+                                                              portfolioValue: portfolioValue,
+                                                              pnl: pnl,
+                                                              return: returnVal
+                                                              }]);
+        this.setState({
+          performanceSeries: newSeries,
+          lastDate: nextDate
+        });
+        
+        break;
+      case 'End':
+        // The server says no more data, we close the websocket
+        this.state.backtestWebsocket.close();
+        break;
+      }
     } catch(err) {
       console.error(err);
     }
   };
 
   render() {
-    return (
-      <PerformanceBoard
+    if (this.state.performanceSeries.length > 10) {
+      return (
+        <PerformanceBoard
         dataSeries={this.state.performanceSeries}
-        logs={this.state.logs}/>
+        logs={this.state.logs}
+        title={this.state.title}
+        xlabel={this.state.xlabel}/>
      );
+    } else {
+      return ("Waiting for data...");
+    }
   }
 }
 
