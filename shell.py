@@ -20,7 +20,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from collections import namedtuple
-from util import getFreePort
+from util import getFreePort, isFreePort
+from displayserver import WebDisplayServerProcess
+import tornado.ioloop
+import subprocess
+from multiprocessing import Process
+
 
 BLKSZ = 1024
 COMMAND_FUNC_PREFIX = 'do_'
@@ -359,27 +364,12 @@ class DBManager():
     def removeServiceByName(self, name):
         self.services.delete_one({'name' : name})
 
-class DisplayManager():
-    def __init__(self):
-        self.webDisplay = subprocess.Popen(['npm', 'start'], cwd='./display/web')
-
-    def init_plot(self, title):
-        ts = Timestamp.now()
-        portfolioInitMessage = DisplayInitMessage(title='New portfolio',
-                                                  xlable='Date',
-                                                  numseries=3)
-        send(portfolioInitMessage)
-
-    def init_plt(self, title):
-        raise Exception('init_plt not yet implemented')
-        
-    def update_plot(self, msg, plotId):
-        sendMsg(msg, plotId)
 
 
-################################
 
-        
+
+
+
 #############################
         # 'capital_used', 'cash', 'cash_flow', 'current_portfolio_weights', 'pnl',
         # 'portfolio_value', 'positions', 'positions_exposure', 'positions_value',

@@ -1,8 +1,8 @@
 import unittest
-import tornado.ioloop
-import subprocess
 import json
-from webdisplayserver import WebDisplayServer
+from displayserver import WebDisplayServer
+from shell import DisplayManager, DisplayType
+import time
 
 
 def fakeDataSource():
@@ -21,16 +21,20 @@ def fakeDataSource():
 
 class WebPlotterTest(unittest.TestCase):
 
-    def testOpen(self):
-        p = subprocess.Popen(['npm', 'start'], cwd='./display/web')
+    def testManage(self):
+        manager = DisplayManager()
         initParams = {
             'title': 'Testing Random Series',
             'xlabel': 'Date',
             'startDate': '2012-01-01'
         }
-        server = WebDisplayServer(fakeDataSource(), initParams)
-        server.listen(9000)
-        tornado.ioloop.IOLoop.current().start()
+        manager.createPlot('randomTest', DisplayType.WEB,
+                           fakeDataSource(), initParams)
+        for i in range(15):
+            print('Closing plot in {}...'.format(i))
+            time.sleep(1)
+        manager.closePlot('randomTest')
+
 
 if __name__ == '__main__':
     unittest.main()

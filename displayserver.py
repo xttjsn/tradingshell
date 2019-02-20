@@ -5,7 +5,17 @@ import json
 import asyncio
 import websockets
 import traceback
+import subprocess
+from multiprocessing import Process
+from enum import Enum
 from util import getFreePort
+
+WEBPORT = 9000
+
+
+class DisplayType(Enum):
+    WEB = 0
+    PLT = 1
 
 
 class PlotHandler(tornado.web.RequestHandler):
@@ -56,11 +66,8 @@ class WebPlotter(Thread):
                     msg = msg.decode('utf8')
                     msg = json.loads(str(msg))
                     msg.update({'type': 'Update'})
-                    print('Received msg: {msg} from Producer, sending it to client'
-                          .format(msg=msg))
                     await websocket.send(json.dumps(msg))
                 except Exception as e:
-                    print(msg)
                     print(e)
                     traceback.print_exc()
 
@@ -115,3 +122,61 @@ class WebDisplayServer(tornado.web.Application):
         self.plotter.start()
 
         super(WebDisplayServer, self).__init__(handlers, **settings)
+
+
+class WebDisplayServerProcess(Process):
+    """Represents an individual process to run webdisplayserver
+
+    It receives the same args as WebDisplayServer, only have other
+    methods to start and stop.
+
+    """
+    def __init__(self, dataReader, initParams: dict, port):
+        super(WebDisplayServerProcess, self).__init__()
+        self.server = WebDisplayServer(dataReader, initParams)
+        self.port = port
+
+    def run(self):
+        self.server.listen(self.port)
+        tornado.ioloop.IOLoop.current().start()
+
+
+class DisplayManager():
+    def __init__(self):
+        self.namedDisplay = {}
+
+    def createPlot(self, name, displayType, dataSource, initParams):
+        """Create the named plot of certain displayType
+
+        For web display, start two processes. One for the web server,
+        one for the front end webpack server. namedDisplay stores a
+        tuple. The first element is a function to close the Plot. The
+        second element is a tuple of display-specific variables like
+        server process and client process.
+
+        """
+        if displayType == DisplayType.WEB:
+            # if not isFreePort(WEBPORT):
+            #     print('WEBPORT {} is not free yet.'.format(WEBPORT))
+            #     return
+
+            server = WebDisplayServerProcess(dataSource, initParams, WEBPORT)
+            server.start()
+            client = subprocess.Popen(['npm', 'start'], cwd='./display/web')
+
+            def closePlot():
+                if server.is_alive():
+                    server.terminate()
+
+                client.terminate()
+                client.kill()
+
+            self.namedDisplay[name] = (closePlot, (server, client))
+
+        else:
+            print('NOT YET IMPLEMENTED!')
+            return
+
+    def closePlot(self, name):
+        closefunc, _ = self.namedDisplay[name]
+        closefunc()
