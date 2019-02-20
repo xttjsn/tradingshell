@@ -33,4 +33,4 @@ class Server:
 
 
     def handle_new_client(self, client, addr):
-        
+        pass
