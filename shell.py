@@ -19,6 +19,7 @@ import pymongo
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from collections import namedtuple
 
 BLKSZ = 1024
 COMMAND_FUNC_PREFIX = 'do_'
@@ -311,7 +312,24 @@ class TradingShell(MyCmd):
     def db(self, arg, inPipe=None, outPipe=1):
         pass
 
-    
+
+class FuncThread():
+    def __init__(self, runnable):
+        self.runnable = runnable
+
+    def run(self):
+        self.runnable()
+
+
+class ThreadManager():
+    def __init__(self):
+        self.thmap = {}
+
+    def start(self, name, func):
+        throbj = FuncThread(func)
+        self.thmap[name] = throbj
+
+
 class WebPlotter():
     def plot(self, inPipe, outPipe=1):
         async def action(websocket, path):
