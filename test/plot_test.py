@@ -1,6 +1,5 @@
 import unittest
 import json
-from displayserver import WebDisplayServer
 from shell import DisplayManager, DisplayType
 import time
 

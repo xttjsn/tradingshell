@@ -1,1 +1,1 @@
-pip install tornado pymongo websockets
+pip install tornado pymongo websockets cmd2 colorama
